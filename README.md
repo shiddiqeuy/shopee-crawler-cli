@@ -7,6 +7,157 @@ Created by Muhammad Shiddiq Azis
 Purpose:
 To understand Shopee market condition through structured market research and data analysis.
 
+## Cara Pakai Singkat
+
+Panduan ini untuk menjalankan project dari awal sampai menghasilkan laporan.
+
+### 1. Siapkan Project
+
+Clone repo dan masuk ke folder project:
+
+```bash
+git clone https://github.com/shiddiqeuy/shopee-crawler-cli.git
+cd shopee-crawler-cli
+```
+
+Install dependency:
+
+```bash
+python -m pip install -e .
+```
+
+Install browser Playwright jika ingin memakai mode browser terpisah:
+
+```bash
+python -m playwright install chromium
+```
+
+Cek apakah CLI sudah bisa dipakai:
+
+```bash
+shopee --help
+shopee version
+shopee status
+```
+
+### 2. Pilih Cara Pakai Browser
+
+Ada 2 mode browser.
+
+Mode `main` memakai Chrome utama yang sudah kamu buka sendiri. Chrome harus dijalankan dengan remote debugging:
+
+```bash
+chrome.exe --remote-debugging-port=9222
+```
+
+Mode `isolated` memakai profile browser khusus aplikasi di `data/browser-profile`:
+
+```bash
+shopee browser connect --mode isolated
+```
+
+Cek status browser:
+
+```bash
+shopee browser status
+```
+
+### 3. Ambil Data Pencarian Shopee
+
+Contoh ambil data keyword:
+
+```bash
+shopee search "kopi arabika"
+```
+
+Batasi jumlah produk yang dikumpulkan:
+
+```bash
+shopee search "kopi arabika" --limit 50
+```
+
+Pilih mode browser:
+
+```bash
+shopee search "kopi arabika" --mode main
+shopee search "kopi arabika" --mode isolated
+```
+
+Data hasil pencarian akan disimpan otomatis ke DuckDB di folder `data/database`.
+
+### 4. Lihat Analytics di Terminal
+
+Analisis snapshot terbaru:
+
+```bash
+shopee analytics
+```
+
+Analisis berdasarkan keyword:
+
+```bash
+shopee analytics --keyword "kopi arabika"
+```
+
+Analisis berdasarkan job tertentu:
+
+```bash
+shopee analytics --job-id srch_xxxxx
+```
+
+### 5. Export ke Excel
+
+Export snapshot terbaru:
+
+```bash
+shopee export excel
+```
+
+Lihat daftar job yang bisa diexport:
+
+```bash
+shopee export jobs
+```
+
+Export berdasarkan keyword:
+
+```bash
+shopee export excel --keyword "kopi arabika"
+```
+
+File Excel akan masuk ke folder `data/exports`.
+
+### 6. Buat Insight AI
+
+Insight AI membaca hasil analytics yang sudah dihitung. AI tidak menghitung ulang angka dan tidak scraping Shopee.
+
+Set API key sesuai provider yang dipakai, contoh OpenAI:
+
+```bash
+set OPENAI_API_KEY=isi_api_key_kamu
+```
+
+Buat laporan insight Markdown:
+
+```bash
+shopee insight --keyword "kopi arabika" --provider openai
+```
+
+Simpan ke file tertentu:
+
+```bash
+shopee insight --keyword "kopi arabika" --provider openai --output reports/kopi-arabika-insight.md
+```
+
+### Catatan Penting
+
+- Tool ini hanya membaca data yang terlihat di halaman hasil pencarian Shopee.
+- Tool ini tidak membuka halaman detail produk.
+- Tool ini tidak melakukan login otomatis.
+- Kalau Shopee meminta CAPTCHA atau verifikasi, selesaikan manual di browser.
+- Semua data disimpan lokal di komputer kamu.
+- Gunakan secara wajar dan hormati aturan Shopee.
+
 ## Features
 
 Planned features:
