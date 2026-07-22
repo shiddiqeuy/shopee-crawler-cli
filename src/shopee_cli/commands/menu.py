@@ -215,8 +215,40 @@ def _find_chrome_profiles_info() -> list[ChromeProfileInfo]:
     return sorted(profiles, key=sort_key)
 
 
+def _is_chrome_running() -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        output = subprocess.check_output(
+            'tasklist /FI "IMAGENAME eq chrome.exe"',
+            shell=True,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return "chrome.exe" in output
+    except Exception:
+        return False
+
+
 def _handle_launch_chrome() -> None:
     console.print("\n[bold cyan]--- Launch Chrome Debugger ---[/bold cyan]")
+
+    if not _is_cdp_available() and _is_chrome_running():
+        console.print(
+            "\n[bold yellow]⚠️  Google Chrome sedang berjalan tanpa Remote Debugging (port 9222).[/bold yellow]"
+        )
+        console.print(
+            "[yellow]Chrome harus ditutup & dibuka kembali agar port 9222 aktif dengan profil pilihan Anda.[/yellow]"
+        )
+        confirm = Prompt.ask(
+            "Tutup Chrome lama & buka kembali dengan profil baru?",
+            choices=["y", "n"],
+            default="y",
+        )
+        if confirm.lower() != "y":
+            console.print("[yellow]Batal membuka Chrome.[/yellow]")
+            return
+
     profiles = _find_chrome_profiles_info()
 
     table = Table(title="Profil Google Chrome Terdeteksi")

@@ -60,13 +60,19 @@ if !count! gtr 0 (
 
 :LAUNCH
 echo.
+echo [INFO] Memeriksa proses Chrome yang berjalan...
+tasklist /FI "IMAGENAME eq chrome.exe" 2>NUL | find /I /N "chrome.exe">NUL
+if "%ERRORLEVEL%"=="0" (
+    echo [INFO] Menutup proses Chrome lama agar Remote Debugging port 9222 dapat aktif...
+    taskkill /F /IM chrome.exe >nul 2>&1
+    timeout /t 2 >nul
+)
+
+echo.
 echo [INFO] Executable: "%CHROME_PATH%"
 echo [INFO] User Data : "%USER_DATA_DIR%"
 echo [INFO] Profil    : "%PROFILE_NAME%"
 echo [INFO] Port      : 9222
-echo.
-echo Catatan: Jika Chrome sudah terbuka sebelumnya tanpa port 9222,
-echo pastikan untuk menutup Chrome terlebih dahulu agar port 9222 bisa aktif.
 echo.
 
 start "" "%CHROME_PATH%" --remote-debugging-port=9222 --user-data-dir="%USER_DATA_DIR%" --profile-directory="%PROFILE_NAME%"
