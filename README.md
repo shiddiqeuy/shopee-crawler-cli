@@ -11,7 +11,25 @@ To understand Shopee market condition through structured market research and dat
 
 Panduan ini untuk menjalankan project dari awal sampai menghasilkan laporan.
 
-### 1. Siapkan Project
+### 🚀 Cara Cepat (1-Klik Setup & Run)
+
+Bagi Anda yang ingin langsung menjalankan aplikasi tanpa perlu setup manual:
+
+#### Windows:
+1. **Setup Otomatis**: Double-click `setup.bat` (atau jalankan `setup.bat` di terminal) untuk menginstall seluruh dependency dan browser Playwright.
+2. **Menu Interaktif**: Double-click `run.bat` (atau ketik `python run.py`) untuk membuka menu navigasi interaktif.
+3. **Chrome Debugger**: Double-click `launch_chrome_debug.bat` untuk membuka Google Chrome dengan Remote Debugging Port 9222 secara otomatis (diperlukan untuk mode `main`).
+
+#### Linux / macOS:
+```bash
+./setup.sh    # Setup venv & dependencies
+./run.sh      # Jalankan menu interaktif CLI
+```
+
+---
+
+### 1. Manual Setup Project (Opsional)
+
 
 Clone repo dan masuk ke folder project:
 
