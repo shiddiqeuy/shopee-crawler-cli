@@ -150,17 +150,55 @@ def _handle_browser() -> None:
     show_browser_status()
 
 
+def _find_chrome_profiles() -> list[str]:
+    import os
+    if sys.platform != "win32":
+        return ["Default"]
+    local_app_data = os.environ.get("LOCALAPPDATA", "")
+    user_data_dir = os.path.join(local_app_data, "Google", "Chrome", "User Data")
+    if not os.path.exists(user_data_dir):
+        return ["Default"]
+    try:
+        profiles = []
+        for entry in os.listdir(user_data_dir):
+            if entry == "Default" or entry.startswith("Profile "):
+                profiles.append(entry)
+        return sorted(
+            profiles,
+            key=lambda x: (0 if x == "Default" else 1, int(x.split()[1]) if " " in x and x.split()[1].isdigit() else 999),
+        )
+    except Exception:
+        return ["Default"]
+
+
 def _handle_launch_chrome() -> None:
     console.print("\n[bold cyan]--- Launch Chrome Debugger ---[/bold cyan]")
+    profiles = _find_chrome_profiles()
+
+    table = Table(title="Profil Google Chrome Terdeteksi")
+    table.add_column("No", style="cyan", width=4)
+    table.add_column("Nama Profil Chrome", style="white")
+
+    for idx, prof in enumerate(profiles, start=1):
+        table.add_row(str(idx), prof)
+    console.print(table)
+
+    choice = Prompt.ask(
+        f"Pilih nomor profil Chrome (1-{len(profiles)})",
+        choices=[str(i) for i in range(1, len(profiles) + 1)],
+        default="1",
+    )
+    selected_profile = profiles[int(choice) - 1]
+
     if sys.platform == "win32":
         try:
-            subprocess.Popen(["launch_chrome_debug.bat"], shell=True)
-            console.print("[green]Menjalankan launch_chrome_debug.bat...[/green]")
+            subprocess.Popen(["launch_chrome_debug.bat", selected_profile], shell=True)
+            console.print(f"[green]Membuka Chrome dengan profil '[bold]{selected_profile}[/bold]' di port 9222...[/green]")
         except Exception as exc:
             console.print(f"[red]Gagal menjalankan script: {exc}[/red]")
     else:
         console.print("Jalankan Chrome manual dengan perintah:")
-        console.print("[yellow]google-chrome --remote-debugging-port=9222[/yellow]")
+        console.print(f"[yellow]google-chrome --remote-debugging-port=9222 --profile-directory='{selected_profile}'[/yellow]")
 
 
 def _handle_analytics() -> None:

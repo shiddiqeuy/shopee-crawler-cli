@@ -1,6 +1,11 @@
 @echo off
+setlocal enabledelayedexpansion
+
+set PYTHONIOENCODING=utf-8
+chcp 65001 >nul 2>&1
+
 echo ===================================================
-echo   Shopee Crawler - Launch Chrome Debug Mode (9222)
+echo   Shopee Crawler - Launch Chrome Debugger Mode
 echo ===================================================
 echo.
 
@@ -22,11 +27,48 @@ if "%CHROME_PATH%"=="" (
     exit /b 1
 )
 
-echo [INFO] Membuka Chrome dari: "%CHROME_PATH%"
-echo [INFO] Port Remote Debugging: 9222
+set "USER_DATA_DIR=%LocalAppData%\Google\Chrome\User Data"
+set "PROFILE_NAME=Default"
+
+if not "%~1"=="" (
+    set "PROFILE_NAME=%~1"
+) else (
+    echo [INFO] Mendeteksi profil Google Chrome yang tersedia...
+    echo.
+    set /a count=0
+    for /d %%D in ("%USER_DATA_DIR%\*") do (
+        set "folder=%%~nxD"
+        if "!folder!"=="Default" (
+            set /a count+=1
+            set "prof_!count!=Default"
+            echo  !count!. Default (Profil Utama)
+        ) else if "!folder:~0,8!"=="Profile " (
+            set /a count+=1
+            set "prof_!count!=!folder!"
+            echo  !count!. !folder!
+        )
+    )
+    
+    if !count! gtr 0 (
+        echo.
+        set /p choice="Pilih nomor profil Chrome (1-!count!) [default 1]: "
+        if not "!choice!"=="" (
+            if defined prof_!choice! (
+                set "PROFILE_NAME=!prof_!choice!!"
+            )
+        )
+    )
+)
+
 echo.
-echo Pastikan Anda sudah login ke Shopee di jendela Chrome ini jika diperlukan.
+echo [INFO] Executable: "%CHROME_PATH%"
+echo [INFO] User Data : "%USER_DATA_DIR%"
+echo [INFO] Profil    : "%PROFILE_NAME%"
+echo [INFO] Port      : 9222
+echo.
+echo Catatan: Jika Chrome sudah terbuka sebelumnya tanpa port 9222,
+echo pastikan untuk menutup Chrome terlebih dahulu agar port 9222 bisa aktif.
 echo.
 
-start "" "%CHROME_PATH%" --remote-debugging-port=9222
-echo [OK] Chrome Debugging Mode berhasil dijalankan!
+start "" "%CHROME_PATH%" --remote-debugging-port=9222 --user-data-dir="%USER_DATA_DIR%" --profile-directory="%PROFILE_NAME%"
+echo [OK] Chrome berhasil dibuka dengan profil %PROFILE_NAME% di port 9222!

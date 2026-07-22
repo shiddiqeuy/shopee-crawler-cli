@@ -28,6 +28,13 @@ class Settings(BaseSettings):
         default="http://127.0.0.1:9222",
         validation_alias=AliasChoices("SHOPEE_BROWSER_CDP_URL", "BROWSER_CDP_URL"),
     )
+    chrome_profile_directory: str = Field(
+        default="Default",
+        validation_alias=AliasChoices(
+            "SHOPEE_CHROME_PROFILE_DIRECTORY",
+            "CHROME_PROFILE_DIRECTORY",
+        ),
+    )
     browser_profile_path: Path = Field(
         default=Path("data/browser-profile"),
         validation_alias=AliasChoices(
