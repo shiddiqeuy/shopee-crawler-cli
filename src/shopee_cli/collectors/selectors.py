@@ -29,7 +29,11 @@ AD_SELECTORS = ("text=/^Iklan$/i", "text=/^Ad$/i")
 MALL_SELECTORS = ("text=/Mall/i",)
 PREFERRED_SELECTORS = ("text=/Star/i", "text=/Preferred/i")
 NO_RESULTS_SELECTORS = ("text=/Tidak ada hasil/i", "text=/No results/i")
-LOGIN_SELECTORS = ("input[name='loginKey']", "text=/Log In/i", "text=/Masuk/i")
+LOGIN_SELECTORS = (
+    "input[name='loginKey']",
+    "input[autocomplete='username']",
+    "div.shopee-authen-form",
+)
 VERIFICATION_SELECTORS = (
     "text=/CAPTCHA/i",
     "text=/Verifikasi/i",

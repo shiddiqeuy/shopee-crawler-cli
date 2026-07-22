@@ -159,12 +159,13 @@ class SearchCollector:
         return page.locator(selectors.PRODUCT_CARD_SELECTORS[0])
 
     def _ensure_safe_page_state(self, page: object) -> None:
+        page_url = getattr(page, "url", "")
         if self._has_selector(page, selectors.VERIFICATION_SELECTORS):
             msg = (
                 "Manual Shopee verification is required before collection can continue."
             )
             raise SearchVerificationRequiredError(msg)
-        if self._has_selector(page, selectors.LOGIN_SELECTORS):
+        if "/buyer/login" in page_url or "/user/login" in page_url or self._has_selector(page, selectors.LOGIN_SELECTORS):
             msg = "Shopee login appears inactive. Log in manually, then rerun search."
             raise SearchVerificationRequiredError(msg)
         if self._has_selector(page, selectors.TEMPORARY_ERROR_SELECTORS):
