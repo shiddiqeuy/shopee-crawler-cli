@@ -110,6 +110,41 @@ def _is_cdp_available(host: str = "127.0.0.1", port: int = 9222) -> bool:
         return False
 
 
+import time
+
+
+def _ensure_chrome_running_with_profile(profile_folder: str) -> bool:
+    """Ensure Chrome is running on port 9222 with the specified profile_folder."""
+    if _is_cdp_available():
+        return True
+
+    if _is_chrome_running():
+        console.print("[dim]Menyiapkan Chrome dengan Remote Debugging (port 9222)...[/dim]")
+        if sys.platform == "win32":
+            subprocess.run(
+                'taskkill /F /IM chrome.exe',
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            time.sleep(1.5)
+
+    if sys.platform == "win32":
+        try:
+            subprocess.Popen(["launch_chrome_debug.bat", profile_folder], shell=True)
+            console.print(
+                f"[green]✓ Membuka Chrome dengan profil '[bold]{profile_folder}[/bold]' di port 9222...[/green]"
+            )
+            for _ in range(10):
+                time.sleep(0.5)
+                if _is_cdp_available():
+                    return True
+        except Exception as exc:
+            console.print(f"[red]Gagal membuka Chrome: {exc}[/red]")
+            return False
+    return _is_cdp_available()
+
+
 def _handle_search() -> None:
     console.print("\n[bold cyan]--- Search Shopee Keyword ---[/bold cyan]")
     keyword = Prompt.ask("Masukkan kata kunci (contoh: kopi arabika)")
@@ -123,23 +158,40 @@ def _handle_search() -> None:
     except ValueError:
         limit = 50
 
-    cdp_active = _is_cdp_available()
-    if cdp_active:
-        mode = "main"
-        console.print("[bold green]✓ Menggunakan Chrome utama yang aktif (mode 'main').[/bold green]")
-    else:
-        mode = "isolated"
-        console.print("[bold cyan]✓ Chrome Debugger (port 9222) tidak aktif. Menggunakan mode 'isolated'.[/bold cyan]")
+    profiles = _find_chrome_profiles_info()
+
+    table = Table(title="Pilih Profil Google Chrome untuk Pencarian")
+    table.add_column("No", style="cyan", width=4)
+    table.add_column("Folder", style="dim", width=12)
+    table.add_column("Nama Profil Chrome", style="bold white")
+    table.add_column("Email Google", style="bold green")
+
+    for idx, prof in enumerate(profiles, start=1):
+        name_str = prof.name
+        if prof.full_name and prof.full_name != prof.name:
+            name_str = f"{prof.name} ({prof.full_name})"
+        table.add_row(str(idx), prof.folder, name_str, prof.email or "-")
+
+    console.print(table)
+
+    choice = Prompt.ask(
+        f"Pilih nomor profil Chrome (1-{len(profiles)})",
+        choices=[str(i) for i in range(1, len(profiles) + 1)],
+        default="1",
+    )
+    selected_info = profiles[int(choice) - 1]
+    selected_profile = selected_info.folder
+
+    console.print(
+        f"\n[bold green]✓ Menggunakan profil '{selected_info.name}' ({selected_info.email or selected_profile})...[/bold green]"
+    )
+    _ensure_chrome_running_with_profile(selected_profile)
 
     try:
         from shopee_cli.browser.models import BrowserMode
-        run_search(keyword=keyword, limit=limit, mode=BrowserMode(mode))
+        run_search(keyword=keyword, limit=limit, mode=BrowserMode.MAIN)
     except (typer.Exit, SystemExit):
-        if mode == "main" and not _is_cdp_available():
-            console.print("\n[yellow]Gagal terhubung ke Chrome utama.[/yellow]")
-            console.print("[bold yellow]Solusi:[/bold yellow]")
-            console.print(" 1. Jalankan menu 3 ('[bold green]Launch Chrome Debugger[/bold green]') untuk membuka Chrome.")
-            console.print(" 2. ATAU gunakan mode '[bold cyan]isolated[/bold cyan]' yang tidak memerlukan Chrome terpisah.")
+        pass
     except Exception as exc:
         console.print(f"[red]Gagal menjalankan search: {exc}[/red]")
 
