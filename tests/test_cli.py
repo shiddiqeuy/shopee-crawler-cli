@@ -1,0 +1,69 @@
+"""CLI command tests."""
+
+from typer.testing import CliRunner
+
+from shopee_cli.browser.exceptions import BrowserNotAvailableError
+from shopee_cli.browser.models import BrowserMode
+from shopee_cli.cli import app
+
+runner = CliRunner()
+
+
+def test_existing_version_command_still_works() -> None:
+    """Milestone 1 version command still works."""
+    result = runner.invoke(app, ["version"])
+
+    assert result.exit_code == 0
+    assert "Shopee Market Research CLI 0.1.0" in result.output
+
+
+def test_existing_status_command_still_works(monkeypatch) -> None:
+    """Milestone 1 status command still works."""
+    monkeypatch.setattr(
+        "shopee_cli.commands.status.initialize_database",
+        lambda settings: None,
+    )
+
+    result = runner.invoke(app, ["status"])
+
+    assert result.exit_code == 0
+    assert "Application Version" in result.output
+
+
+def test_browser_help_lists_subcommands() -> None:
+    """Browser help exposes milestone commands."""
+    result = runner.invoke(app, ["browser", "--help"])
+
+    assert result.exit_code == 0
+    assert "status" in result.output
+    assert "connect" in result.output
+    assert "tabs" in result.output
+    assert "open-shopee" in result.output
+
+
+def test_connection_errors_produce_actionable_messages(monkeypatch) -> None:
+    """Connection failures print concise retry guidance."""
+
+    class FakeManager:
+        """BrowserManager fake that cannot connect."""
+
+        mode = BrowserMode.MAIN
+
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def connect(self) -> None:
+            raise BrowserNotAvailableError(
+                "Could not connect to Main Chrome at http://127.0.0.1:9222."
+            )
+
+        def disconnect(self) -> None:
+            pass
+
+    monkeypatch.setattr("shopee_cli.commands.browser.BrowserManager", FakeManager)
+
+    result = runner.invoke(app, ["browser", "connect", "--mode", "main"])
+
+    assert result.exit_code == 1
+    assert "Could not connect to Main Chrome" in result.output
+    assert "shopee browser connect --mode main" in result.output
