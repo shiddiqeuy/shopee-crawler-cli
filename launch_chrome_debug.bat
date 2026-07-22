@@ -11,13 +11,9 @@ echo.
 
 set "CHROME_PATH="
 
-if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
-    set "CHROME_PATH=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
-) else if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" (
-    set "CHROME_PATH=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
-) else if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" (
-    set "CHROME_PATH=%LocalAppData%\Google\Chrome\Application\chrome.exe"
-)
+if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" set "CHROME_PATH=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
+if "%CHROME_PATH%"=="" if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" set "CHROME_PATH=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+if "%CHROME_PATH%"=="" if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" set "CHROME_PATH=%LocalAppData%\Google\Chrome\Application\chrome.exe"
 
 if "%CHROME_PATH%"=="" (
     echo [ERROR] Google Chrome tidak ditemukan di lokasi standar!
@@ -32,34 +28,37 @@ set "PROFILE_NAME=Default"
 
 if not "%~1"=="" (
     set "PROFILE_NAME=%~1"
-) else (
-    echo [INFO] Mendeteksi profil Google Chrome yang tersedia...
+    goto :LAUNCH
+)
+
+echo [INFO] Mendeteksi profil Google Chrome yang tersedia...
+echo.
+set /a count=0
+
+if exist "%USER_DATA_DIR%\Default" (
+    set /a count+=1
+    set "prof_!count!=Default"
+    echo  !count!. Default (Profil Utama)
+)
+
+for /d %%D in ("%USER_DATA_DIR%\Profile *") do (
+    set "folder=%%~nxD"
+    set /a count+=1
+    set "prof_!count!=!folder!"
+    echo  !count!. !folder!
+)
+
+if !count! gtr 0 (
     echo.
-    set /a count=0
-    for /d %%D in ("%USER_DATA_DIR%\*") do (
-        set "folder=%%~nxD"
-        if "!folder!"=="Default" (
-            set /a count+=1
-            set "prof_!count!=Default"
-            echo  !count!. Default (Profil Utama)
-        ) else if "!folder:~0,8!"=="Profile " (
-            set /a count+=1
-            set "prof_!count!=!folder!"
-            echo  !count!. !folder!
-        )
-    )
-    
-    if !count! gtr 0 (
-        echo.
-        set /p choice="Pilih nomor profil Chrome (1-!count!) [default 1]: "
-        if not "!choice!"=="" (
-            if defined prof_!choice! (
-                set "PROFILE_NAME=!prof_!choice!!"
-            )
+    set /p choice="Pilih nomor profil Chrome (1-!count!) [default 1]: "
+    if not "!choice!"=="" (
+        if defined prof_!choice! (
+            set "PROFILE_NAME=!prof_!choice!!"
         )
     )
 )
 
+:LAUNCH
 echo.
 echo [INFO] Executable: "%CHROME_PATH%"
 echo [INFO] User Data : "%USER_DATA_DIR%"
