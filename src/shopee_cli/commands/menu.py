@@ -99,6 +99,17 @@ def _print_menu_options() -> None:
     console.print(table)
 
 
+import socket
+
+
+def _is_cdp_available(host: str = "127.0.0.1", port: int = 9222) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
 def _handle_search() -> None:
     console.print("\n[bold cyan]--- Search Shopee Keyword ---[/bold cyan]")
     keyword = Prompt.ask("Masukkan kata kunci (contoh: kopi arabika)")
@@ -112,13 +123,25 @@ def _handle_search() -> None:
     except ValueError:
         limit = 50
 
-    mode = Prompt.ask("Pilih mode browser (main/isolated)", choices=["main", "isolated"], default="main")
+    cdp_active = _is_cdp_available()
+    default_mode = "main" if cdp_active else "isolated"
+    if not cdp_active:
+        console.print("[dim]Info: Chrome Debugger (port 9222) tidak terdeteksi. Default menggunakan mode 'isolated'.[/dim]")
+
+    mode = Prompt.ask("Pilih mode browser (main/isolated)", choices=["main", "isolated"], default=default_mode)
 
     try:
         from shopee_cli.browser.models import BrowserMode
         run_search(keyword=keyword, limit=limit, mode=BrowserMode(mode))
+    except (typer.Exit, SystemExit):
+        if mode == "main" and not _is_cdp_available():
+            console.print("\n[yellow]Gagal terhubung ke Chrome utama.[/yellow]")
+            console.print("[bold yellow]Solusi:[/bold yellow]")
+            console.print(" 1. Jalankan '[bold green]launch_chrome_debug.bat[/bold green]' untuk membuka Chrome mode Remote Debugging.")
+            console.print(" 2. ATAU pilih mode '[bold cyan]isolated[/bold cyan]' yang tidak memerlukan Chrome terpisah.")
     except Exception as exc:
         console.print(f"[red]Gagal menjalankan search: {exc}[/red]")
+
 
 
 def _handle_browser() -> None:
