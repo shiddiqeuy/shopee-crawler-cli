@@ -43,7 +43,7 @@ class IsolatedBrowser:
             )
         except Error as error:
             self.disconnect()
-            msg = "Could not launch the isolated browser profile."
+            msg = f"Could not launch the isolated browser profile: {error}"
             raise BrowserConnectionError(msg) from error
 
     def disconnect(self) -> None:
