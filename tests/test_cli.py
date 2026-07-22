@@ -76,6 +76,24 @@ def test_export_jobs_help_appears() -> None:
     assert "--limit" in result.output
 
 
+def test_analytics_help_appears() -> None:
+    """Analytics command help exposes snapshot selectors."""
+    result = runner.invoke(app, ["analytics", "--help"])
+
+    assert result.exit_code == 0
+    assert "--job-id" in result.output
+    assert "--keyword" in result.output
+
+
+def test_insight_help_appears() -> None:
+    """Insight command help exposes provider and output options."""
+    result = runner.invoke(app, ["insight", "--help"])
+
+    assert result.exit_code == 0
+    assert "--provider" in result.output
+    assert "--output" in result.output
+
+
 def test_connection_errors_produce_actionable_messages(monkeypatch) -> None:
     """Connection failures print concise retry guidance."""
 

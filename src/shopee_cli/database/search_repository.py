@@ -201,6 +201,18 @@ class SearchRepository:
             "LOWER(keyword) = LOWER(?)", [keyword]
         )
 
+    def get_latest_completed_job(self) -> SearchJob | None:
+        """Return the latest completed search job for analytics."""
+        return self._get_latest_job_by_status(SearchJobStatus.COMPLETED)
+
+    def get_latest_completed_job_by_keyword(self, keyword: str) -> SearchJob | None:
+        """Return the latest completed search job matching a keyword."""
+        return self._get_latest_job_by_status(
+            SearchJobStatus.COMPLETED,
+            "LOWER(keyword) = LOWER(?)",
+            [keyword],
+        )
+
     def list_exportable_jobs(self, limit: int = 20) -> list[SearchJob]:
         """List recent completed or partial search jobs."""
         self.initialize_schema()
@@ -274,6 +286,37 @@ class SearchRepository:
                 ).fetchone()
         except DuckDBError as error:
             msg = "Exportable search job could not be loaded."
+            raise SearchPersistenceError(msg) from error
+
+        return _job_from_row(row) if row else None
+
+    def _get_latest_job_by_status(
+        self,
+        status: SearchJobStatus,
+        where_clause: str | None = None,
+        parameters: list[object] | None = None,
+    ) -> SearchJob | None:
+        self.initialize_schema()
+        query_parameters: list[object] = [status.value]
+        if parameters:
+            query_parameters.extend(parameters)
+        extra_clause = f" AND {where_clause}" if where_clause else ""
+        try:
+            with open_database(self._settings) as connection:
+                row = connection.execute(
+                    f"""
+                    SELECT job_id, keyword, requested_limit, collected_count,
+                           browser_mode, sort_mode, source_url, status,
+                           started_at, finished_at, error_message
+                    FROM search_jobs
+                    WHERE status = ?{extra_clause}
+                    ORDER BY COALESCE(finished_at, started_at) DESC, started_at DESC
+                    LIMIT 1
+                    """,
+                    query_parameters,
+                ).fetchone()
+        except DuckDBError as error:
+            msg = "Completed search job could not be loaded."
             raise SearchPersistenceError(msg) from error
 
         return _job_from_row(row) if row else None

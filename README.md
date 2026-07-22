@@ -104,7 +104,57 @@ List available jobs:
 shopee export jobs
 ```
 
-The workbook contains exactly two sheets: Summary and Search Results. Missing values remain empty or Unknown, product rows preserve stored ranking order, and the Summary sheet contains basic descriptive statistics only. Every historical snapshot can be exported separately.
+The workbook contains Summary, Search Results, and Analytics sheets. Missing values remain empty or Unknown, product rows preserve stored ranking order, and analytics are basic deterministic statistics only. Every historical snapshot can be exported separately.
+
+## Analytics MVP
+
+Analyze the latest completed search snapshot:
+
+```bash
+shopee analytics
+```
+
+Analyze a specific completed job:
+
+```bash
+shopee analytics --job-id srch_xxxxx
+```
+
+Analyze the latest completed snapshot for a keyword:
+
+```bash
+shopee analytics --keyword "kopi arabika"
+```
+
+Analytics are calculated only from collected database snapshots. No AI is used, and no assumptions are generated. Metrics are deterministic and traceable to stored search-result records.
+
+## AI Insight Engine
+
+Generate a Markdown market insight from structured analytics JSON:
+
+```bash
+shopee insight
+```
+
+Generate insight for a specific completed job:
+
+```bash
+shopee insight --job-id srch_xxxxx
+```
+
+Generate insight for the latest completed snapshot for a keyword:
+
+```bash
+shopee insight --keyword "kopi arabika"
+```
+
+Choose a provider and output file:
+
+```bash
+shopee insight --provider openai --output reports/kopi-arabika-insight.md
+```
+
+The AI analyzes structured analytics only. It does not scrape Shopee, does not access browser data, does not query raw DuckDB tables, and does not replace the Analytics Engine. The AI does not calculate metrics; it only interprets metrics already calculated by the deterministic analytics layer.
 
 ## Roadmap
 

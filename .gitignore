@@ -14,3 +14,4 @@ build/
 .env
 logs/*.log
 data/database/*.duckdb
+reports/*.md

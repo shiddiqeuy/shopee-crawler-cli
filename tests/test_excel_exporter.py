@@ -69,7 +69,7 @@ def test_exports_latest_snapshot_and_reopens_workbook(tmp_path) -> None:
 
     assert result.job.job_id == completed.job_id
     assert result.output_path.parent == settings.export_path
-    assert workbook.sheetnames == ["Summary", "Search Results"]
+    assert workbook.sheetnames == ["Summary", "Search Results", "Analytics"]
     assert workbook["Search Results"].max_row == 2
 
 

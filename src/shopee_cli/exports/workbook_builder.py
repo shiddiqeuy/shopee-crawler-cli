@@ -5,6 +5,7 @@ from datetime import datetime
 from openpyxl import Workbook
 
 from shopee_cli.collectors.models import SearchJob, SearchResult
+from shopee_cli.exports.analytics_sheet import create_analytics_sheet
 from shopee_cli.exports.exceptions import WorkbookBuildError
 from shopee_cli.exports.search_results_sheet import create_search_results_sheet
 from shopee_cli.exports.summary_sheet import create_summary_sheet
@@ -22,6 +23,8 @@ def build_workbook(
         create_summary_sheet(summary, job, results, exported_at)
         results_sheet = workbook.create_sheet("Search Results")
         create_search_results_sheet(results_sheet, job.job_id, results)
+        analytics_sheet = workbook.create_sheet("Analytics")
+        create_analytics_sheet(analytics_sheet, job, results)
         _apply_metadata(workbook)
         _validate_workbook(workbook)
     except Exception as error:
@@ -48,6 +51,10 @@ def _validate_workbook(workbook: Workbook) -> None:
     visible_sheets = [
         sheet for sheet in workbook.worksheets if sheet.sheet_state == "visible"
     ]
-    if [sheet.title for sheet in visible_sheets] != ["Summary", "Search Results"]:
-        msg = "Workbook must contain exactly Summary and Search Results sheets."
+    if [sheet.title for sheet in visible_sheets] != [
+        "Summary",
+        "Search Results",
+        "Analytics",
+    ]:
+        msg = "Workbook must contain Summary, Search Results, and Analytics sheets."
         raise WorkbookBuildError(msg)

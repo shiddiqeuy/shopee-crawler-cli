@@ -70,7 +70,7 @@ def test_workbook_structure_metadata_and_reopen(tmp_path) -> None:
 
     reopened = load_workbook(path)
 
-    assert reopened.sheetnames == ["Summary", "Search Results"]
+    assert reopened.sheetnames == ["Summary", "Search Results", "Analytics"]
     assert reopened.properties.title == "Shopee Market Research Report"
     assert reopened.properties.creator == "Muhammad Shiddiq Azis"
 
@@ -118,3 +118,15 @@ def test_zero_result_workbook_has_headers_only() -> None:
     sheet = workbook["Search Results"]
 
     assert sheet.max_row == 1
+
+
+def test_analytics_sheet_generation() -> None:
+    """Workbook includes deterministic Analytics sheet values."""
+    workbook = build_workbook(_job(), _results(), datetime(2026, 7, 22, 11, 0))
+    sheet = workbook["Analytics"]
+    values = [cell.value for row in sheet.iter_rows() for cell in row]
+
+    assert "Price Summary" in values
+    assert "Sales Summary" in values
+    assert "Product Distribution" in values
+    assert "Data Quality" in values
