@@ -50,6 +50,32 @@ def test_search_help_appears() -> None:
     assert "--max-scrolls" in result.output
 
 
+def test_export_help_appears() -> None:
+    """Export command help is available from the root CLI."""
+    result = runner.invoke(app, ["export", "--help"])
+
+    assert result.exit_code == 0
+    assert "excel" in result.output
+    assert "jobs" in result.output
+
+
+def test_export_excel_help_appears() -> None:
+    """Excel export help exposes selection options."""
+    result = runner.invoke(app, ["export", "excel", "--help"])
+
+    assert result.exit_code == 0
+    assert "--job-id" in result.output
+    assert "--keyword" in result.output
+
+
+def test_export_jobs_help_appears() -> None:
+    """Export jobs help exposes limit option."""
+    result = runner.invoke(app, ["export", "jobs", "--help"])
+
+    assert result.exit_code == 0
+    assert "--limit" in result.output
+
+
 def test_connection_errors_produce_actionable_messages(monkeypatch) -> None:
     """Connection failures print concise retry guidance."""
 

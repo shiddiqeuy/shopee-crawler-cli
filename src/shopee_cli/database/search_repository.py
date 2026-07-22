@@ -169,3 +169,151 @@ class SearchRepository:
             finished_at=row[9],
             error_message=row[10],
         )
+
+    def get_search_job(self, job_id: str) -> SearchJob | None:
+        """Return a search job by ID."""
+        self.initialize_schema()
+        try:
+            with open_database(self._settings) as connection:
+                row = connection.execute(
+                    """
+                    SELECT job_id, keyword, requested_limit, collected_count,
+                           browser_mode, sort_mode, source_url, status,
+                           started_at, finished_at, error_message
+                    FROM search_jobs
+                    WHERE job_id = ?
+                    """,
+                    [job_id],
+                ).fetchone()
+        except DuckDBError as error:
+            msg = "Search job could not be loaded."
+            raise SearchPersistenceError(msg) from error
+
+        return _job_from_row(row) if row else None
+
+    def get_latest_exportable_job(self) -> SearchJob | None:
+        """Return the latest completed or partial search job."""
+        return self._get_latest_exportable_job_where()
+
+    def get_latest_exportable_job_by_keyword(self, keyword: str) -> SearchJob | None:
+        """Return the latest exportable search job for a keyword."""
+        return self._get_latest_exportable_job_where(
+            "LOWER(keyword) = LOWER(?)", [keyword]
+        )
+
+    def list_exportable_jobs(self, limit: int = 20) -> list[SearchJob]:
+        """List recent completed or partial search jobs."""
+        self.initialize_schema()
+        try:
+            with open_database(self._settings) as connection:
+                rows = connection.execute(
+                    """
+                    SELECT job_id, keyword, requested_limit, collected_count,
+                           browser_mode, sort_mode, source_url, status,
+                           started_at, finished_at, error_message
+                    FROM search_jobs
+                    WHERE status IN ('completed', 'partial')
+                    ORDER BY COALESCE(finished_at, started_at) DESC, started_at DESC
+                    LIMIT ?
+                    """,
+                    [limit],
+                ).fetchall()
+        except DuckDBError as error:
+            msg = "Exportable search jobs could not be listed."
+            raise SearchPersistenceError(msg) from error
+
+        return [_job_from_row(row) for row in rows]
+
+    def get_search_results(self, job_id: str) -> list[SearchResult]:
+        """Return stored search results ordered by rank."""
+        self.initialize_schema()
+        try:
+            with open_database(self._settings) as connection:
+                rows = connection.execute(
+                    """
+                    SELECT product_id, rank, product_name, product_url, image_url,
+                           price_raw, price_min, price_max, original_price,
+                           discount_percentage, sold_raw, sold_count, rating,
+                           shop_name, location, is_advertisement, is_mall,
+                           is_preferred, collected_at
+                    FROM search_results
+                    WHERE job_id = ?
+                    ORDER BY rank ASC
+                    """,
+                    [job_id],
+                ).fetchall()
+        except DuckDBError as error:
+            msg = "Search results could not be loaded."
+            raise SearchPersistenceError(msg) from error
+
+        return [_result_from_row(row) for row in rows]
+
+    def _get_latest_exportable_job_where(
+        self,
+        where_clause: str | None = None,
+        parameters: list[object] | None = None,
+    ) -> SearchJob | None:
+        self.initialize_schema()
+        status_clause = "status IN ('completed', 'partial')"
+        query_parameters = parameters or []
+        if where_clause:
+            status_clause = f"{status_clause} AND {where_clause}"
+        try:
+            with open_database(self._settings) as connection:
+                row = connection.execute(
+                    f"""
+                    SELECT job_id, keyword, requested_limit, collected_count,
+                           browser_mode, sort_mode, source_url, status,
+                           started_at, finished_at, error_message
+                    FROM search_jobs
+                    WHERE {status_clause}
+                    ORDER BY COALESCE(finished_at, started_at) DESC, started_at DESC
+                    LIMIT 1
+                    """,
+                    query_parameters,
+                ).fetchone()
+        except DuckDBError as error:
+            msg = "Exportable search job could not be loaded."
+            raise SearchPersistenceError(msg) from error
+
+        return _job_from_row(row) if row else None
+
+
+def _job_from_row(row: tuple[object, ...]) -> SearchJob:
+    return SearchJob(
+        job_id=row[0],
+        keyword=row[1],
+        requested_limit=row[2],
+        collected_count=row[3],
+        browser_mode=row[4],
+        sort_mode=row[5],
+        source_url=row[6],
+        status=row[7],
+        started_at=row[8],
+        finished_at=row[9],
+        error_message=row[10],
+    )
+
+
+def _result_from_row(row: tuple[object, ...]) -> SearchResult:
+    return SearchResult(
+        product_id=row[0],
+        rank=row[1],
+        product_name=row[2],
+        product_url=row[3],
+        image_url=row[4],
+        price_raw=row[5],
+        price_min=row[6],
+        price_max=row[7],
+        original_price=row[8],
+        discount_percentage=row[9],
+        sold_raw=row[10],
+        sold_count=row[11],
+        rating=row[12],
+        shop_name=row[13],
+        location=row[14],
+        is_advertisement=row[15],
+        is_mall=row[16],
+        is_preferred=row[17],
+        collected_at=row[18],
+    )

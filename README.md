@@ -70,6 +70,42 @@ shopee search "kopi arabika" --mode isolated
 
 Search collection is limited to fields visible on Shopee search-result pages. Product-detail pages are not opened. Every run is stored as a separate historical snapshot, and manual login or verification may occasionally be required. Collected fields depend on what Shopee displays on the page.
 
+## Excel Export
+
+Export an existing DuckDB search snapshot to an Excel workbook. Export does not rerun browser collection.
+
+Export latest snapshot:
+
+```bash
+shopee export excel
+```
+
+Export by job ID:
+
+```bash
+shopee export excel --job-id srch_xxxxx
+```
+
+Export latest snapshot for a keyword:
+
+```bash
+shopee export excel --keyword "kopi arabika"
+```
+
+Custom output:
+
+```bash
+shopee export excel --output data/exports/kopi-arabika.xlsx
+```
+
+List available jobs:
+
+```bash
+shopee export jobs
+```
+
+The workbook contains exactly two sheets: Summary and Search Results. Missing values remain empty or Unknown, product rows preserve stored ranking order, and the Summary sheet contains basic descriptive statistics only. Every historical snapshot can be exported separately.
+
 ## Roadmap
 
 - Project foundation and CLI commands
