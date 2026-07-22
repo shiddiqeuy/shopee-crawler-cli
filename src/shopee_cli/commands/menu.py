@@ -124,11 +124,12 @@ def _handle_search() -> None:
         limit = 50
 
     cdp_active = _is_cdp_available()
-    default_mode = "main" if cdp_active else "isolated"
-    if not cdp_active:
-        console.print("[dim]Info: Chrome Debugger (port 9222) tidak terdeteksi. Default menggunakan mode 'isolated'.[/dim]")
-
-    mode = Prompt.ask("Pilih mode browser (main/isolated)", choices=["main", "isolated"], default=default_mode)
+    if cdp_active:
+        mode = "main"
+        console.print("[bold green]✓ Menggunakan Chrome utama yang aktif (mode 'main').[/bold green]")
+    else:
+        mode = "isolated"
+        console.print("[bold cyan]✓ Chrome Debugger (port 9222) tidak aktif. Menggunakan mode 'isolated'.[/bold cyan]")
 
     try:
         from shopee_cli.browser.models import BrowserMode
@@ -137,8 +138,8 @@ def _handle_search() -> None:
         if mode == "main" and not _is_cdp_available():
             console.print("\n[yellow]Gagal terhubung ke Chrome utama.[/yellow]")
             console.print("[bold yellow]Solusi:[/bold yellow]")
-            console.print(" 1. Jalankan '[bold green]launch_chrome_debug.bat[/bold green]' untuk membuka Chrome mode Remote Debugging.")
-            console.print(" 2. ATAU pilih mode '[bold cyan]isolated[/bold cyan]' yang tidak memerlukan Chrome terpisah.")
+            console.print(" 1. Jalankan menu 3 ('[bold green]Launch Chrome Debugger[/bold green]') untuk membuka Chrome.")
+            console.print(" 2. ATAU gunakan mode '[bold cyan]isolated[/bold cyan]' yang tidak memerlukan Chrome terpisah.")
     except Exception as exc:
         console.print(f"[red]Gagal menjalankan search: {exc}[/red]")
 
