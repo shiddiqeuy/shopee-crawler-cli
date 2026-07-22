@@ -35,8 +35,12 @@ LOGIN_SELECTORS = (
     "div.shopee-authen-form",
 )
 VERIFICATION_SELECTORS = (
+    "iframe[src*='captcha']",
+    ".geetest_holder",
+    ".captcha-container",
     "text=/CAPTCHA/i",
-    "text=/Verifikasi/i",
     "text=/Verification/i",
+    "text=/Lengkapi verifikasi/i",
+    "text=/Masukkan captcha/i",
 )
 TEMPORARY_ERROR_SELECTORS = ("text=/Coba lagi/i", "text=/Try again/i")
