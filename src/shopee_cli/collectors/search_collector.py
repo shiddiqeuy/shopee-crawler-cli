@@ -65,13 +65,28 @@ def validate_max_scrolls(max_scrolls: int) -> int:
     return max_scrolls
 
 
-def build_search_url(keyword: str, sort_mode: SearchSortMode) -> str:
+def build_search_url(keyword: str, sort_mode: SearchSortMode = SearchSortMode.RELEVANCE) -> str:
     """Build a safe Shopee marketplace search URL."""
-    if sort_mode != SearchSortMode.RELEVANCE:
-        msg = f"Sort mode '{sort_mode.value}' is not safely implemented yet."
-        raise UnsupportedSortModeError(msg)
+    normalized = validate_keyword(keyword)
 
-    query = urlencode({"keyword": validate_keyword(keyword)})
+    if sort_mode == SearchSortMode.LATEST:
+        sort_by = "ctime"
+    elif sort_mode == SearchSortMode.PRICE_LOW or sort_mode == SearchSortMode.PRICE_HIGH:
+        sort_by = "price"
+    else:
+        sort_by = "sales"
+
+    params = {
+        "keyword": normalized,
+        "page": 0,
+        "sortBy": sort_by,
+    }
+    if sort_mode == SearchSortMode.PRICE_LOW:
+        params["order"] = "asc"
+    elif sort_mode == SearchSortMode.PRICE_HIGH:
+        params["order"] = "desc"
+
+    query = urlencode(params)
     url = f"https://{SHOPEE_HOST}/search?{query}"
     parsed = urlparse(url)
     if parsed.scheme != "https" or parsed.hostname != SHOPEE_HOST:

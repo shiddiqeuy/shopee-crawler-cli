@@ -44,17 +44,11 @@ def test_rejects_invalid_max_scrolls() -> None:
         validate_max_scrolls(31)
 
 
-def test_rejects_unsupported_sort_mode() -> None:
-    """Accepted CLI sort values that are not safely mapped are rejected."""
-    with pytest.raises(UnsupportedSortModeError):
-        build_search_url("kopi", SearchSortMode.LATEST)
-
-
 def test_search_url_safely_encodes_keyword() -> None:
     """Search URL uses encoded query parameters."""
     url = build_search_url("kopi arabika", SearchSortMode.RELEVANCE)
 
-    assert url == "https://shopee.co.id/search?keyword=kopi+arabika"
+    assert url == "https://shopee.co.id/search?keyword=kopi+arabika&page=0&sortBy=sales"
 
 
 def test_search_url_uses_valid_shopee_domain() -> None:
