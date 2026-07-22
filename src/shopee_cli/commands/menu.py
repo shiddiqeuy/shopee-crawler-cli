@@ -150,37 +150,86 @@ def _handle_browser() -> None:
     show_browser_status()
 
 
-def _find_chrome_profiles() -> list[str]:
-    import os
+from dataclasses import dataclass
+import json
+import os
+
+
+@dataclass
+class ChromeProfileInfo:
+    folder: str
+    name: str
+    email: str
+    full_name: str
+
+
+def _find_chrome_profiles_info() -> list[ChromeProfileInfo]:
     if sys.platform != "win32":
-        return ["Default"]
+        return [ChromeProfileInfo(folder="Default", name="Default", email="", full_name="")]
+
     local_app_data = os.environ.get("LOCALAPPDATA", "")
     user_data_dir = os.path.join(local_app_data, "Google", "Chrome", "User Data")
-    if not os.path.exists(user_data_dir):
-        return ["Default"]
-    try:
-        profiles = []
-        for entry in os.listdir(user_data_dir):
-            if entry == "Default" or entry.startswith("Profile "):
-                profiles.append(entry)
-        return sorted(
-            profiles,
-            key=lambda x: (0 if x == "Default" else 1, int(x.split()[1]) if " " in x and x.split()[1].isdigit() else 999),
-        )
-    except Exception:
-        return ["Default"]
+    local_state_path = os.path.join(user_data_dir, "Local State")
+
+    cache_info = {}
+    if os.path.exists(local_state_path):
+        try:
+            with open(local_state_path, encoding="utf-8", errors="ignore") as f:
+                data = json.load(f)
+                cache_info = data.get("profile", {}).get("info_cache", {})
+        except Exception:
+            pass
+
+    profiles: list[ChromeProfileInfo] = []
+    if os.path.exists(user_data_dir):
+        try:
+            for entry in os.listdir(user_data_dir):
+                if entry == "Default" or entry.startswith("Profile "):
+                    prof_data = cache_info.get(entry, {})
+                    display_name = prof_data.get("name") or entry
+                    email = prof_data.get("user_name") or ""
+                    full_name = prof_data.get("gaia_name") or ""
+                    profiles.append(
+                        ChromeProfileInfo(
+                            folder=entry,
+                            name=display_name,
+                            email=email,
+                            full_name=full_name,
+                        )
+                    )
+        except Exception:
+            pass
+
+    if not profiles:
+        return [ChromeProfileInfo(folder="Default", name="Default", email="", full_name="")]
+
+    def sort_key(p: ChromeProfileInfo) -> tuple[int, int | str]:
+        if p.folder == "Default":
+            return (0, 0)
+        parts = p.folder.split()
+        if len(parts) > 1 and parts[1].isdigit():
+            return (1, int(parts[1]))
+        return (1, p.folder)
+
+    return sorted(profiles, key=sort_key)
 
 
 def _handle_launch_chrome() -> None:
     console.print("\n[bold cyan]--- Launch Chrome Debugger ---[/bold cyan]")
-    profiles = _find_chrome_profiles()
+    profiles = _find_chrome_profiles_info()
 
     table = Table(title="Profil Google Chrome Terdeteksi")
     table.add_column("No", style="cyan", width=4)
-    table.add_column("Nama Profil Chrome", style="white")
+    table.add_column("Folder", style="dim", width=12)
+    table.add_column("Nama Profil Chrome", style="bold white")
+    table.add_column("Email Google", style="bold green")
 
     for idx, prof in enumerate(profiles, start=1):
-        table.add_row(str(idx), prof)
+        name_str = prof.name
+        if prof.full_name and prof.full_name != prof.name:
+            name_str = f"{prof.name} ({prof.full_name})"
+        table.add_row(str(idx), prof.folder, name_str, prof.email or "-")
+
     console.print(table)
 
     choice = Prompt.ask(
@@ -188,17 +237,22 @@ def _handle_launch_chrome() -> None:
         choices=[str(i) for i in range(1, len(profiles) + 1)],
         default="1",
     )
-    selected_profile = profiles[int(choice) - 1]
+    selected_info = profiles[int(choice) - 1]
+    selected_profile = selected_info.folder
 
     if sys.platform == "win32":
         try:
             subprocess.Popen(["launch_chrome_debug.bat", selected_profile], shell=True)
-            console.print(f"[green]Membuka Chrome dengan profil '[bold]{selected_profile}[/bold]' di port 9222...[/green]")
+            console.print(
+                f"[green]Membuka Chrome dengan profil '[bold]{selected_info.name}[/bold]' ({selected_info.email or selected_profile}) di port 9222...[/green]"
+            )
         except Exception as exc:
             console.print(f"[red]Gagal menjalankan script: {exc}[/red]")
     else:
         console.print("Jalankan Chrome manual dengan perintah:")
-        console.print(f"[yellow]google-chrome --remote-debugging-port=9222 --profile-directory='{selected_profile}'[/yellow]")
+        console.print(
+            f"[yellow]google-chrome --remote-debugging-port=9222 --profile-directory='{selected_profile}'[/yellow]"
+        )
 
 
 def _handle_analytics() -> None:
