@@ -41,6 +41,15 @@ def test_browser_help_lists_subcommands() -> None:
     assert "open-shopee" in result.output
 
 
+def test_search_help_appears() -> None:
+    """Search command help is available from the root CLI."""
+    result = runner.invoke(app, ["search", "--help"])
+
+    assert result.exit_code == 0
+    assert "--limit" in result.output
+    assert "--max-scrolls" in result.output
+
+
 def test_connection_errors_produce_actionable_messages(monkeypatch) -> None:
     """Connection failures print concise retry guidance."""
 

@@ -1,0 +1,1 @@
+"""Pure value normalization helpers."""

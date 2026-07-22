@@ -2,6 +2,8 @@
 
 from typing import Protocol
 
+from playwright.sync_api import Page
+
 from shopee_cli.browser.exceptions import InvalidBrowserModeError
 from shopee_cli.browser.isolated import IsolatedBrowser
 from shopee_cli.browser.main_chrome import MainChromeBrowser
@@ -22,6 +24,8 @@ class BrowserImplementation(Protocol):
     def list_tabs(self, include_all: bool = False) -> list[TabInfo]: ...
 
     def open_shopee(self, url: str) -> TabInfo: ...
+
+    def get_or_open_shopee_page(self, url: str) -> Page: ...
 
 
 class BrowserManager:
@@ -67,6 +71,10 @@ class BrowserManager:
     def open_shopee(self) -> TabInfo:
         """Open or reuse a Shopee marketplace tab."""
         return self._browser.open_shopee(SHOPEE_HOME_URL)
+
+    def get_or_open_shopee_page(self) -> Page:
+        """Return a Shopee marketplace page for read-only collection."""
+        return self._browser.get_or_open_shopee_page(SHOPEE_HOME_URL)
 
     def wait_until_closed(self) -> None:
         """Keep isolated browser sessions visible until closed by the user."""

@@ -3,6 +3,7 @@
 import typer
 
 from shopee_cli.commands.browser import browser_app
+from shopee_cli.commands.search import run_search
 from shopee_cli.commands.status import show_status
 from shopee_cli.commands.version import show_version
 from shopee_cli.logging.logger import configure_logging
@@ -15,6 +16,7 @@ app = typer.Typer(
 
 app.command("version")(show_version)
 app.command("status")(show_status)
+app.command("search")(run_search)
 app.add_typer(browser_app, name="browser")
 
 

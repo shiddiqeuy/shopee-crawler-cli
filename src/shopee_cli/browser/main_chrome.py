@@ -1,6 +1,6 @@
 """Main Chrome CDP connection implementation."""
 
-from playwright.sync_api import Browser, Error, Playwright, sync_playwright
+from playwright.sync_api import Browser, Error, Page, Playwright, sync_playwright
 
 from shopee_cli.browser.exceptions import BrowserNotAvailableError
 from shopee_cli.browser.models import (
@@ -105,14 +105,26 @@ class MainChromeBrowser:
 
     def open_shopee(self, url: str) -> TabInfo:
         """Reuse an existing Shopee tab or open Shopee in the attached browser."""
+        page = self.get_or_open_shopee_page(url)
+        return TabInfo(
+            index=0,
+            title=page.title(),
+            url=page.url,
+            is_active=True,
+            is_shopee=is_shopee_url(page.url),
+            login_status=detect_login_status(page),
+        )
+
+    def get_or_open_shopee_page(self, url: str) -> Page:
+        """Return an existing marketplace page or open a new one."""
         if self._browser is None:
             self.connect()
 
         assert self._browser is not None
-        tabs = self.list_tabs()
-        marketplace_tabs = [tab for tab in tabs if is_marketplace_url(tab.url)]
-        if marketplace_tabs:
-            return marketplace_tabs[0]
+        for context in self._browser.contexts:
+            for page in context.pages:
+                if is_marketplace_url(page.url):
+                    return page
 
         context = self._browser.contexts[0] if self._browser.contexts else None
         if context is None:
@@ -123,11 +135,4 @@ class MainChromeBrowser:
         except Error as error:
             msg = "Could not open Shopee in Main Chrome."
             raise BrowserNotAvailableError(msg) from error
-        return TabInfo(
-            index=0,
-            title=page.title(),
-            url=page.url,
-            is_active=True,
-            is_shopee=is_shopee_url(page.url),
-            login_status=detect_login_status(page),
-        )
+        return page

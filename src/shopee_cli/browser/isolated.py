@@ -3,6 +3,7 @@
 from playwright.sync_api import (
     BrowserContext,
     Error,
+    Page,
     Playwright,
     sync_playwright,
 )
@@ -107,14 +108,25 @@ class IsolatedBrowser:
 
     def open_shopee(self, url: str) -> TabInfo:
         """Reuse an existing Shopee tab or open Shopee in the isolated profile."""
+        page = self.get_or_open_shopee_page(url)
+        return TabInfo(
+            index=0,
+            title=page.title(),
+            url=page.url,
+            is_active=True,
+            is_shopee=is_shopee_url(page.url),
+            login_status=detect_login_status(page),
+        )
+
+    def get_or_open_shopee_page(self, url: str) -> Page:
+        """Return an existing marketplace page or open a new one."""
         if self._context is None:
             self.connect()
 
         assert self._context is not None
-        tabs = self.list_tabs()
-        marketplace_tabs = [tab for tab in tabs if is_marketplace_url(tab.url)]
-        if marketplace_tabs:
-            return marketplace_tabs[0]
+        for page in self._context.pages:
+            if is_marketplace_url(page.url):
+                return page
 
         page = self._context.new_page()
         try:
@@ -122,14 +134,7 @@ class IsolatedBrowser:
         except Error as error:
             msg = "Could not open Shopee in the isolated browser profile."
             raise BrowserConnectionError(msg) from error
-        return TabInfo(
-            index=len(self._context.pages) - 1,
-            title=page.title(),
-            url=page.url,
-            is_active=True,
-            is_shopee=is_shopee_url(page.url),
-            login_status=detect_login_status(page),
-        )
+        return page
 
     def wait_until_closed(self) -> None:
         """Keep the CLI attached while the isolated browser is open."""

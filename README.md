@@ -45,6 +45,31 @@ shopee browser tabs
 shopee browser open-shopee
 ```
 
+## Search Collector
+
+Collect visible Shopee search-result product cards into local DuckDB snapshots.
+
+Basic usage:
+
+```bash
+shopee search "kopi arabika"
+```
+
+Custom limit:
+
+```bash
+shopee search "kopi arabika" --limit 100
+```
+
+Choose browser mode:
+
+```bash
+shopee search "kopi arabika" --mode main
+shopee search "kopi arabika" --mode isolated
+```
+
+Search collection is limited to fields visible on Shopee search-result pages. Product-detail pages are not opened. Every run is stored as a separate historical snapshot, and manual login or verification may occasionally be required. Collected fields depend on what Shopee displays on the page.
+
 ## Roadmap
 
 - Project foundation and CLI commands
