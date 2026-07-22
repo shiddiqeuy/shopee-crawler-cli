@@ -169,10 +169,10 @@ shopee insight --keyword "kopi arabika" --provider openai --output reports/kopi-
 
 ### Catatan Penting
 
+- **Verifikasi Anti-Bot**: Aplikasi ini **belum berhasil/belum mendukung penyelesaian verifikasi anti-bot Shopee secara otomatis**. Jika Shopee menampilkan verifikasi anti-bot (seperti puzzle/slider CAPTCHA), Anda harus menggeser/menyelesaikannya secara manual di jendela browser yang terbuka.
 - Tool ini hanya membaca data yang terlihat di halaman hasil pencarian Shopee.
 - Tool ini tidak membuka halaman detail produk.
 - Tool ini tidak melakukan login otomatis.
-- Kalau Shopee meminta CAPTCHA atau verifikasi, selesaikan manual di browser.
 - Semua data disimpan lokal di komputer kamu.
 - Gunakan secara wajar dan hormati aturan Shopee.
 
@@ -237,7 +237,7 @@ shopee search "kopi arabika" --mode main
 shopee search "kopi arabika" --mode isolated
 ```
 
-Search collection is limited to fields visible on Shopee search-result pages. Product-detail pages are not opened. Every run is stored as a separate historical snapshot, and manual login or verification may occasionally be required. Collected fields depend on what Shopee displays on the page.
+Search collection is limited to fields visible on Shopee search-result pages. Product-detail pages are not opened. The application does not automatically bypass anti-bot verification; any puzzle slider or CAPTCHA must be completed manually in the browser window. Every run is stored as a separate historical snapshot, and manual login or verification may occasionally be required. Collected fields depend on what Shopee displays on the page.
 
 ## Excel Export
 
