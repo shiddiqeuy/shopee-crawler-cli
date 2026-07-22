@@ -65,17 +65,18 @@ class FakeIsolatedChromium:
         user_data_dir: str,
         headless: bool,
         timeout: int,
+        **kwargs: object,
     ) -> object:
         """Record persistent context arguments."""
         self.user_data_dir = user_data_dir
         self.headless = headless
-        return object()
+        return FakeContext([])
 
 
 class FakePage:
     """Fake page for tab listing."""
 
-    def __init__(self, url: str, title: str) -> None:
+    def __init__(self, url: str = "", title: str = "") -> None:
         self.url = url
         self._title = title
 
@@ -83,12 +84,22 @@ class FakePage:
         """Return fake page title."""
         return self._title
 
+    def add_init_script(self, script: str) -> None:
+        """Fake add_init_script method."""
+        pass
+
 
 class FakeContext:
     """Fake browser context."""
 
-    def __init__(self, pages: list[FakePage]) -> None:
-        self.pages = pages
+    def __init__(self, pages: list[FakePage] | None = None) -> None:
+        self.pages = pages if pages is not None else [FakePage()]
+
+    def new_page(self) -> FakePage:
+        """Return a new fake page."""
+        page = FakePage()
+        self.pages.append(page)
+        return page
 
 
 def test_main_mode_does_not_launch_browser(monkeypatch) -> None:

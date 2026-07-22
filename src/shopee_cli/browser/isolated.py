@@ -35,16 +35,43 @@ class IsolatedBrowser:
         """Launch a persistent context using the configured profile path."""
         self._settings.browser_profile_path.mkdir(parents=True, exist_ok=True)
         self._playwright = sync_playwright().start()
+
+        stealth_args = [
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            "--disable-infobars",
+        ]
+
+        launch_kwargs = {
+            "user_data_dir": str(self._settings.browser_profile_path),
+            "headless": self._settings.browser_headless,
+            "timeout": self._settings.browser_timeout_ms,
+            "args": stealth_args,
+        }
+
         try:
             self._context = self._playwright.chromium.launch_persistent_context(
-                user_data_dir=str(self._settings.browser_profile_path),
-                headless=self._settings.browser_headless,
-                timeout=self._settings.browser_timeout_ms,
+                channel="chrome",
+                **launch_kwargs,
             )
-        except Error as error:
-            self.disconnect()
-            msg = f"Could not launch the isolated browser profile: {error}"
-            raise BrowserConnectionError(msg) from error
+        except Error:
+            try:
+                self._context = self._playwright.chromium.launch_persistent_context(
+                    **launch_kwargs,
+                )
+            except Error as error:
+                self.disconnect()
+                msg = f"Could not launch the isolated browser profile: {error}"
+                raise BrowserConnectionError(msg) from error
+
+        if self._context:
+            page = self._context.pages[0] if self._context.pages else self._context.new_page()
+            try:
+                page.add_init_script(
+                    "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+                )
+            except Exception:
+                pass
 
     def disconnect(self) -> None:
         """Close only the context created by this application."""
