@@ -1,0 +1,33 @@
+[project]
+name = "shopee-market-research-cli"
+version = "0.1.0"
+description = "Local-first CLI for Shopee market research foundation."
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+    { name = "Muhammad Shiddiq Azis" }
+]
+dependencies = [
+    "duckdb>=1.1.3",
+    "pydantic-settings>=2.7.0",
+    "rich>=13.9.4",
+    "structlog>=24.4.0",
+    "typer>=0.15.1",
+]
+
+[project.scripts]
+shopee = "shopee_cli.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shopee_cli"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
